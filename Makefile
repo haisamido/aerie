@@ -45,16 +45,16 @@ aerie-kubernetes-up: ## aerie up via kubernetes
 	cd ${AERIE_K8S_PATH} && \
 	kubectl apply -f ./secrets/ -n ${AERIE_NAMESPACE} && \
 	kubectl apply -k ./ -n ${AERIE_NAMESPACE}
+	pkill kubectl || true && sleep 7 && \
+	kubectl --context "${K8S_CONTEXT}" --namespace "${AERIE_NAMESPACE}" port-forward service/postgres 5432:5432 &
 
-# ./docker-entrypoint-initdb.d/
-
-aerie-postgres-port-forward:
-	kubectl --context "${K8S_CONTEXT}" --namespace "aerie-dev" port-forward service/postgres 5432:5432 &
-
-aerie-db:
-	source ./.env && \
+aerie-db: ## aerie configure its database
+	source ${AERIE_K8S_SECRETS_PATH}/.env && \
 	cd ${AERIE_DEPLOYMENT_PATH} && \
-	  cd ./deployment/postgres-init-db && ./init-aerie.sh
+	cd ./postgres-init-db && ./init-aerie.sh
+
+kubefwd-services: ## kubefwd forward services for ${AERIE_NAMESPACE}
+	sudo kubefwd services -n ${AERIE_NAMESPACE}
 
 #------------------------------------------------------------------------------
 # kubectl targets
