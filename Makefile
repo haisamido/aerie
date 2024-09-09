@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := help
 
 .PHONY:
+.EXPORT_ALL_VARIABLES:
 
 #export DOCKER_DEFAULT_PLATFORM=linux/arm64
 export DOCKER_BUILDKIT=0
@@ -21,22 +22,28 @@ AERIE_DEPLOYMENT_PATH=./deployment
 AERIE_K8S_PATH=${AERIE_DEPLOYMENT_PATH}/kubernetes
 AERIE_K8S_SECRETS_PATH=${AERIE_K8S_PATH}/secrets
 
-directories:
+include ${AERIE_K8S_SECRETS_PATH}/.env
 
-installs:
+installs: ## install dependencies (right now only for mac os x, using brew)
 	brew install kustomize
 	brew install txn2/tap/kubefwd
 
+#------------------------------------------------------------------------------
+# aerie-docker targets
+#------------------------------------------------------------------------------
 aerie-docker-up: | aerie-docker-down ## aerie up via docker
 	@echo source: https://nasa-ammos.github.io/aerie-docs/introduction/#fast-track
+	source ${AERIE_K8S_SECRETS_PATH}/.env && \
 	cd ${AERIE_DEPLOYMENT_PATH} && \
-	source .env && \
 	docker compose up 
 
-aerie-docker-down: ## aerie up via docker
+aerie-docker-down: ## aerie down via docker
 	cd ${AERIE_DEPLOYMENT_PATH} && \
 	docker compose down
 
+#------------------------------------------------------------------------------
+# aerie-kubernetes targets
+#------------------------------------------------------------------------------
 aerie-kubernetes-up: ## aerie up via kubernetes
 	@echo && echo "[INFO] Attempting to create namespace k8s:context:[${K8S_CONTEXT}]:namespace:[${AERIE_NAMESPACE}]" && \
 	make kubectl-use-context K8S_CONTEXT=${K8S_CONTEXT} && \
@@ -48,12 +55,15 @@ aerie-kubernetes-up: ## aerie up via kubernetes
 	pkill kubectl || true && sleep 7 && \
 	kubectl --context "${K8S_CONTEXT}" --namespace "${AERIE_NAMESPACE}" port-forward service/postgres 5432:5432 &
 
-aerie-db: ## aerie configure its database
-	source ${AERIE_K8S_SECRETS_PATH}/.env && \
-	cd ${AERIE_DEPLOYMENT_PATH} && \
-	cd ./postgres-init-db && ./init-aerie.sh
+aerie-kubernetes-db: ## aerie: configure aerie db via kubernetes
+	temp_file=$$(mktemp) && \
+	chmod +x $$temp_file && \
+	cat ${AERIE_DEPLOYMENT_PATH}/postgres-init-db/init-aerie.sh > $$temp_file && \
+	echo $$temp_file > /tmp/aerie_temp.txt && \
+	sed -i '' "s/\/docker-entrypoint-initdb\.d/${DOCKER_ENTRYPOINT_PATH}/g" $$temp_file && \
+	$$temp_file
 
-kubefwd-services: ## kubefwd forward services for ${AERIE_NAMESPACE}
+aerie-kubefwd-services: ## kubefwd forward services from kubernetes for ${AERIE_NAMESPACE}
 	sudo kubefwd services -n ${AERIE_NAMESPACE}
 
 #------------------------------------------------------------------------------
@@ -104,12 +114,13 @@ kubectl-delete-deployment-%: ## kubectl delete -n $* deployment ${K8S_DEPLOYMENT
 	@kubectl delete -n $* deployment ${K8S_DEPLOYMENT}
 
 clean-kubernetes: ## delete k8s namespaces (of course NOT default)
-	@make kubectl-delete-namespace-aerie-dev || true
+	@make kubectl-delete-namespace-${AERIE_NAMESPACE} || true
 
 clean-docker:
+	yes | docker system prune -a
 
-clean:
-	
+clean: ## delete namespace ${AERIE_NAMESPACE} and aerie docker images
+	${MAKE} clean-kubernetes clean-docker
 
 references:
 	@echo https://github.com/txn2/kubefwd/blob/master/README.md
