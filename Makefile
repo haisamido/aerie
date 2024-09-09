@@ -22,7 +22,7 @@ AERIE_DEPLOYMENT_PATH=./deployment
 AERIE_K8S_PATH=${AERIE_DEPLOYMENT_PATH}/kubernetes
 AERIE_K8S_SECRETS_PATH=${AERIE_K8S_PATH}/secrets
 
-include ${AERIE_K8S_SECRETS_PATH}/.env
+include ${AERIE_K8S_SECRETS_PATH}/aerie-demo
 
 installs: ## install dependencies (right now only for mac os x, using brew)
 	brew install kustomize
@@ -33,7 +33,7 @@ installs: ## install dependencies (right now only for mac os x, using brew)
 #------------------------------------------------------------------------------
 aerie-docker-up: | aerie-docker-down ## aerie up via docker
 	@echo source: https://nasa-ammos.github.io/aerie-docs/introduction/#fast-track
-	source ${AERIE_K8S_SECRETS_PATH}/.env && \
+	source ${AERIE_K8S_SECRETS_PATH}/aerie-demo && \
 	cd ${AERIE_DEPLOYMENT_PATH} && \
 	docker compose up 
 
