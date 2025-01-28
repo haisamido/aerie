@@ -1,0 +1,7 @@
+include:
+  - local: ".gitlab/Jobs/_build-app.ci.yml"
+
+variables:
+  CS_DOCKERFILE_PATH: aerie-scheduler/Dockerfile
+  CI_APPLICATION_REPOSITORY: $CI_REGISTRY_IMAGE/aerie-scheduler
+

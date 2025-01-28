@@ -1,0 +1,45 @@
+
+build_aerie-ui_image:
+  extends: .build_image
+  variables:
+    IMAGE_NAME: aerie-ui
+
+build_aerie-hasura_image:
+  extends: .build_image
+  variables:
+    IMAGE_NAME: aerie-hasura
+
+build_aerie-gateway_image:
+  extends: .build_image
+  variables:
+    IMAGE_NAME: aerie-gateway
+
+build_aerie-merlin_image:
+  extends: .build_image
+  variables:
+    IMAGE_NAME: aerie-merlin
+
+build_aerie-merlin-worker_image:
+  extends: .build_image
+  variables:
+    IMAGE_NAME: aerie-merlin-worker
+
+build_aerie-scheduler_image:
+  extends: .build_image
+  variables:
+    IMAGE_NAME: aerie-scheduler
+
+build_aerie-scheduler-worker_image:
+  extends: .build_image
+  variables:
+    IMAGE_NAME: aerie-scheduler-worker
+
+build_aerie-sequencing_image:
+  extends: .build_image
+  variables:
+    IMAGE_NAME: aerie-sequencing
+
+build_aerie-postgres_image:
+  extends: .build_image
+  variables:
+    IMAGE_NAME: aerie-postgres
