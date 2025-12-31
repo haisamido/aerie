@@ -1,21 +1,21 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedModelType;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.CachedEngineStore;
 import gov.nasa.jpl.aerie.merlin.driver.CachedSimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -333,7 +333,7 @@ public class FooSimulationDuplicationTest {
   static void assertResultsEqual(SimulationResults expected, SimulationResults actual) {
     if (expected.equals(actual)) return;
     final var differences = new ArrayList<String>();
-    if (!expected.duration.isEqualTo(actual.duration)) {
+    if (!expected.duration.equals(actual.duration)) {
       differences.add("duration");
     }
     if (!expected.realProfiles.equals(actual.realProfiles)) {
@@ -351,7 +351,7 @@ public class FooSimulationDuplicationTest {
     if (!expected.startTime.equals(actual.startTime)) {
       differences.add("startTime");
     }
-    if (!expected.duration.isEqualTo(actual.duration)) {
+    if (!expected.duration.equals(actual.duration)) {
       differences.add("duration");
     }
     if (!expected.topics.equals(actual.topics)) {

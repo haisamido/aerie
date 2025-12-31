@@ -15,7 +15,6 @@ import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
  *
  * This activity causes a monkey to create new bananas in the banana plant.
  *
- * @subsystem fruit
  * @contact John Doe
  */
 @ActivityType("GrowBanana")
@@ -40,7 +39,7 @@ public record GrowBananaActivity(int quantity, Duration growingDuration) {
   @EffectModel
   @ControllableDuration(parameterName = "growingDuration")
   public void run(final Mission mission) {
-    final var rate = this.quantity() / (double) this.growingDuration().in(Duration.SECONDS);
+    final var rate = this.quantity() / (double) this.growingDuration().ratioOver(Duration.SECOND);
     mission.fruit.rate.add(rate);
     delay(this.growingDuration());
     mission.fruit.rate.add(-rate);

@@ -68,23 +68,23 @@ See the [environment variables document](https://github.com/NASA-AMMOS/aerie-gat
 | `SCHEDULER_DB_USER`           | Username of the Scheduler DB User                                     | `string` | scheduler_service                                  |
 | `SCHEDULER_DB_PASSWORD`       | Password of the Scheduler DB User                                     | `string` |                                                    |
 | `SCHEDULER_OUTPUT_MODE`       | How scheduler output is sent back to Aerie                            | `string` | UpdateInputPlanWithNewActivities                   |
-| `SCHEDULER_RULES_JAR`         | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/scheduler_rules.jar |
 | `MAX_NB_CACHED_SIMULATION_ENGINES` | The maximum number of simulation engines to cache in memory during a scheduling run. Must be at least 1 | `number` | 1                                                  |
 
 ## Aerie Sequencing
 
-| Name                          | Description                                                   | Type     | Default                            |
-|-------------------------------|---------------------------------------------------------------|----------|------------------------------------|
-| `AERIE_DB_HOST`               | Hostname of Postgres instance                                 | `string` | postgres                           |
-| `AERIE_DB_PORT`               | Port of Postgres instance                                     | `number` | 5432                               |
-| `HASURA_GRAPHQL_ADMIN_SECRET` | The admin secret for Hasura which gives admin access if used. | `string` |                                    |
-| `LOG_FILE`                    | Either an output filepath to log to, or 'console'             | `string` | console                            |
-| `LOG_LEVEL`                   | Logging level for filtering logs                              | `string` | warn                               |
-| `MERLIN_GRAPHQL_URL`          | URI of the Aerie GraphQL API                                  | `string` | http://hasura:8080/v1/graphql      |
-| `SEQUENCING_DB_USER`          | Username of the Sequencing DB User                            | `string` | sequencing_service                 |
-| `SEQUENCING_DB_PASSWORD`      | Password of the Sequencing DB User                            | `string` |                                    |
-| `SEQUENCING_LOCAL_STORE`      | Local storage file storage in the container                   | `string` | /usr/src/app/sequencing_file_store |
-| `SEQUENCING_SERVER_PORT`      | Port the server listens on                                    | `number` | 27184                              |
+| Name                          | Description                                                                                   | Type     | Default                            |
+|-------------------------------|-----------------------------------------------------------------------------------------------|----------|------------------------------------|
+| `AERIE_DB_HOST`               | Hostname of Postgres instance                                                                 | `string` | postgres                           |
+| `AERIE_DB_PORT`               | Port of Postgres instance                                                                     | `number` | 5432                               |
+| `HASURA_GRAPHQL_ADMIN_SECRET` | The admin secret for Hasura which gives admin access if used.                                 | `string` |                                    |
+| `LOG_FILE`                    | Either an output filepath to log to, or 'console'                                             | `string` | console                            |
+| `LOG_LEVEL`                   | Logging level for filtering logs                                                              | `string` | warn                               |
+| `MERLIN_GRAPHQL_URL`          | URI of the Aerie GraphQL API                                                                  | `string` | http://hasura:8080/v1/graphql      |
+| `SEQUENCING_DB_USER`          | Username of the Sequencing DB User                                                            | `string` | sequencing_service                 |
+| `SEQUENCING_DB_PASSWORD`      | Password of the Sequencing DB User                                                            | `string` |                                    |
+| `SEQUENCING_LOCAL_STORE`      | Local storage file storage in the container                                                   | `string` | /usr/src/app/sequencing_file_store |
+| `SEQUENCING_SERVER_PORT`      | Port the server listens on                                                                    | `number` | 27184                              |
+| `SEQUENCING_LANGUAGE`         | The language that sequences are generated in when using templates ("SEQN", "STOL", or "TEXT") | `string` | "SEQN"                             |
 
 ## Aerie UI
 

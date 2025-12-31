@@ -52,8 +52,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -108,7 +108,7 @@ class ConstraintsDSLCompilationServiceTests {
     ));
     if (actualErrors.errors()
                     .stream()
-                    .noneMatch(e -> e.message().contains(error))) {
+                    .noneMatch(e -> e.getMessage().contains(error))) {
       fail("Expected error:\n" + error + "\nIn list of errors:\n" + actualErrors.errors() + "\n");
     }
   }

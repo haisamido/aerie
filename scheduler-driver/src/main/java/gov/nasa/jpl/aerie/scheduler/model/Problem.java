@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalEvent;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -10,8 +10,7 @@ import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraintWithI
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationData;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimulationResultsConverter;
-import org.apache.commons.collections4.BidiMap;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,6 +48,7 @@ public class Problem {
 
   private final Map<String, LinearProfile> realExternalProfiles = new HashMap<>();
   private final Map<String, DiscreteProfile> discreteExternalProfiles = new HashMap<>();
+  private Map<String, List<ExternalEvent>> eventsByDerivationGroup = new HashMap<>();
 
   /**
    * the initial seed plan to start scheduling from
@@ -59,6 +59,8 @@ public class Problem {
    * initial simulation results loaded from the DB
    */
   private Optional<SimulationData> initialSimulationResults;
+
+  public final Map<ActivityDirectiveId, GoalId> sourceSchedulingGoals;
 
   /**
    * container of all goals in the problem, indexed by name
@@ -80,7 +82,9 @@ public class Problem {
       MissionModel<?> mission,
       PlanningHorizon planningHorizon,
       SimulationFacade simulationFacade,
-      SchedulerModel schedulerModel) {
+      SchedulerModel schedulerModel,
+      Map<ActivityDirectiveId, GoalId> sourceSchedulingGoals
+  ) {
     this.missionModel = mission;
     this.schedulerModel = schedulerModel;
     this.initialPlan = new PlanInMemory();
@@ -96,6 +100,16 @@ public class Problem {
       this.simulationFacade.addActivityTypes(this.getActivityTypes());
     }
     this.initialSimulationResults = Optional.empty();
+    this.sourceSchedulingGoals = sourceSchedulingGoals;
+  }
+
+  public Problem(
+      MissionModel<?> mission,
+      PlanningHorizon planningHorizon,
+      SimulationFacade simulationFacade,
+      SchedulerModel schedulerModel
+  ) {
+    this(mission, planningHorizon, simulationFacade, schedulerModel, new HashMap<>());
   }
 
   public SimulationFacade getSimulationFacade(){
@@ -136,7 +150,7 @@ public class Problem {
    * @return the initial seed plan that schedulers may start from
    */
   public Plan getInitialPlan() {
-    return initialPlan;
+    return initialPlan.duplicate();
   }
 
   /**
@@ -150,9 +164,9 @@ public class Problem {
   ) {
     initialPlan = plan;
     this.initialSimulationResults = initialSimulationResults.map(simulationResults -> new SimulationData(
-        plan,
+        getInitialPlan(),
         simulationResults,
-        SimulationResultsConverter.convertToConstraintModelResults(simulationResults)
+        new gov.nasa.jpl.aerie.constraints.model.SimulationResults(simulationResults)
     ));
   }
 
@@ -173,6 +187,10 @@ public class Problem {
     this.discreteExternalProfiles.putAll(discreteExternalProfiles);
   }
 
+  public void setEventsByDerivationGroup(final Map<String, List<ExternalEvent>> events) {
+    this.eventsByDerivationGroup = events;
+  }
+
   public Map<String, LinearProfile> getRealExternalProfiles(){
     return this.realExternalProfiles;
   }
@@ -180,6 +198,8 @@ public class Problem {
   public Map<String, DiscreteProfile> getDiscreteExternalProfiles(){
     return this.discreteExternalProfiles;
   }
+
+  public Map<String, List<ExternalEvent>> getEventsByDerivationGroup() { return this.eventsByDerivationGroup; }
 
   public void setGoals(List<Goal> goals){
     goalsOrderedByPriority.clear();

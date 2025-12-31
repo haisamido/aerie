@@ -1,16 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.CachedSimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.OneStepTask;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.types.ActivityInstance;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsComputerInputs;
@@ -29,7 +25,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.scheduler.SchedulingInterruptedException;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -38,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -138,7 +138,7 @@ public class AnchorSchedulerTest {
 
     @Test
     @DisplayName("Activities depending on no activities simulate at the correct time")
-    public void activitiesAnchoredToPlan() throws SchedulingInterruptedException {
+    public void activitiesAnchoredToPlan() {
       final var minusOneMinute = Duration.of(-60, Duration.SECONDS);
       final var resolveToPlanStartAnchors = new HashMap<ActivityDirectiveId, ActivityDirective>(415);
       final Map<ActivityInstanceId, ActivityInstance> simulatedActivities = new HashMap<>(415);
@@ -245,7 +245,7 @@ public class AnchorSchedulerTest {
 
     @Test
     @DisplayName("Activities depending on another activities simulate at the correct time")
-    public void activitiesAnchoredToOtherActivities() throws SchedulingInterruptedException {
+    public void activitiesAnchoredToOtherActivities() {
       final var allEndTimeAnchors = new HashMap<ActivityDirectiveId, ActivityDirective>(400);
       final var endTimeAnchorEveryFifth = new HashMap<ActivityDirectiveId, ActivityDirective>(400);
       final Map<ActivityInstanceId, ActivityInstance> simulatedActivities = new HashMap<>(800);
@@ -356,7 +356,7 @@ public class AnchorSchedulerTest {
 
     @Test
     @DisplayName("Reference to anchored activities are correctly maintained by the driver")
-    public void activitiesAnchoredToOtherActivitiesSimple() throws SchedulingInterruptedException {
+    public void activitiesAnchoredToOtherActivitiesSimple() {
       final var activitiesToSimulate = new HashMap<ActivityDirectiveId, ActivityDirective>(2);
       activitiesToSimulate.put(
           new ActivityDirectiveId(0),
@@ -371,7 +371,7 @@ public class AnchorSchedulerTest {
 
     @Test
     @DisplayName("Decomposition and anchors do not interfere with each other")
-    public void decomposingActivitiesAndAnchors() throws SchedulingInterruptedException{
+    public void decomposingActivitiesAndAnchors() {
       // Given positions Left, Center, Right in an anchor chain, where each position can either contain a Non-Decomposition (ND) activity or a Decomposition (D) activity,
       // and the connection between Center and Left and Right and Center can be either Start (<-s-) or End (<-e-),
       // and two NDs cannot be adjacent to each other, there are 20 permutations.
@@ -611,7 +611,7 @@ public class AnchorSchedulerTest {
 
     @Test
     @DisplayName("Activities arranged in a wide anchor tree simulate at the correct time")
-    public void naryTreeAnchorChain() throws SchedulingInterruptedException{
+    public void naryTreeAnchorChain() {
       // Full and complete 5-ary tree,  6 levels deep
       // Number of activity directives = 5^0 + 5^1 + 5^2 + 5^3 + 5^4 + 5^5 = 3906
 
@@ -674,6 +674,11 @@ public class AnchorSchedulerTest {
     }
 
     @Override
+    public Optional<String> getSubsystem() {
+      return Optional.empty();
+    }
+
+    @Override
     public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
       return executor -> new OneStepTask<>($ -> {
         $.emit(this, delayedActivityDirectiveInputTopic);
@@ -696,6 +701,11 @@ public class AnchorSchedulerTest {
     @Override
     public OutputType<Object> getOutputType() {
       return testModelOutputType;
+    }
+
+    @Override
+    public Optional<String> getSubsystem() {
+      return Optional.empty();
     }
 
     @Override
@@ -803,6 +813,11 @@ public class AnchorSchedulerTest {
             @Override
             public InputType<Object> getConfigurationType() {
               return testModelInputType;
+            }
+
+            @Override
+            public List<String> getSubsystems() {
+              return Collections.emptyList();
             }
 
             @Override

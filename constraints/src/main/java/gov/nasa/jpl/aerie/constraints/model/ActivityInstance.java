@@ -1,12 +1,11 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 public record ActivityInstance(
@@ -37,5 +36,15 @@ public record ActivityInstance(
 
   public long id() {
     return this.instanceId().id();
+  }
+
+  public ActivityInstance withDirectiveId(final ActivityDirectiveId directiveId) {
+    return new ActivityInstance(
+        instanceId,
+        type,
+        parameters,
+        interval,
+        Optional.of(directiveId)
+    );
   }
 }

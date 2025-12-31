@@ -5,13 +5,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+import gov.nasa.jpl.aerie.scheduler.model.GoalId;
 import org.intellij.lang.annotations.Language;
 
 /*package-local*/ final class GetGoalSatisfactionAction implements AutoCloseable {
   private final static @Language("SQL") String sql = """
     select
       goal.goal_id,
+      goal.goal_invocation_id,
       goal.goal_revision,
       goal.satisfied
     from scheduler.scheduling_goal_analysis as goal
@@ -31,7 +32,11 @@ import org.intellij.lang.annotations.Language;
     final var goals = new HashMap<GoalId, Boolean>();
     while (resultSet.next()) {
       goals.put(
-          new GoalId(resultSet.getLong("goal_id"), resultSet.getLong("goal_revision")),
+          new GoalId(
+              resultSet.getLong("goal_id"),
+              resultSet.getLong("goal_revision"),
+              resultSet.getLong("goal_invocation_id")
+          ),
           resultSet.getBoolean("satisfied")
       );
     }

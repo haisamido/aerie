@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
+import gov.nasa.ammos.aerie.procedural.timeline.payloads.ExternalEvent;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteProfileFromDuration;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -28,6 +29,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.model.GoalId;
 import gov.nasa.jpl.aerie.scheduler.model.PersistentTimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
@@ -35,13 +37,14 @@ import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.models.ExternalProfiles;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
-import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.ResourceType;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinDatabaseService;
 import gov.nasa.jpl.aerie.scheduler.server.services.MerlinServiceException;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -49,6 +52,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -80,46 +84,52 @@ class SchedulingDSLCompilationServiceTests {
     }
 
     @Override
-    public long getPlanRevision(final PlanId planId) throws IOException, NoSuchPlanException, MerlinServiceException {
+    public long getPlanRevision(final PlanId planId) {
       return 0;
     }
 
     @Override
-    public PlanMetadata getPlanMetadata(final PlanId planId)
-    throws IOException, NoSuchPlanException, MerlinServiceException
-    {
+    public PlanMetadata getPlanMetadata(final PlanId planId) {
       return null;
     }
 
     @Override
-    public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem mission)
-    throws IOException, NoSuchPlanException, MerlinServiceException, InvalidJsonException, InstantiationException
-    {
+    public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem mission) {
       return null;
     }
 
     @Override
-    public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException, MerlinServiceException {
+    public void ensurePlanExists(final PlanId planId) {
 
     }
 
     @Override
-    public Optional<Pair<SimulationResults, DatasetId>> getSimulationResults(final PlanMetadata planMetadata)
-    throws MerlinServiceException, IOException, InvalidJsonException
-    {
+    public Optional<Pair<SimulationResults, DatasetId>> getSimulationResults(final PlanMetadata planMetadata) {
       return Optional.empty();
     }
 
     @Override
-    public ExternalProfiles getExternalProfiles(final PlanId planId) throws MerlinServiceException, IOException {
+    public ExternalProfiles getExternalProfiles(final PlanId planId) {
       return null;
     }
 
     @Override
-    public Collection<ResourceType> getResourceTypes(final PlanId planId)
-    throws IOException, MerlinServiceException, NoSuchPlanException
+    public Map<String, List<ExternalEvent>> getExternalEvents(final PlanId planId, final Instant horizonStart)
+    throws MerlinServiceException, IOException
     {
+      return Map.of();
+    }
+
+    @Override
+    public Collection<ResourceType> getResourceTypes(final PlanId planId) {
       return null;
+    }
+
+    @Override
+    public Map<ActivityDirectiveId, GoalId> getActivityIdToGoalIdMap(final PlanId planId)
+    throws MerlinServiceException, IOException
+    {
+      return Map.of();
     }
   };
   SchedulingDSLCompilationService schedulingDSLCompilationService;

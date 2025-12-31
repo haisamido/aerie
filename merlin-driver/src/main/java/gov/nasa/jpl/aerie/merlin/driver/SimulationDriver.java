@@ -10,6 +10,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 
@@ -105,6 +108,8 @@ public final class SimulationDriver {
           }
           simulationExtentConsumer.accept(engine.getElapsedTime());
         }
+
+        simulationExtentConsumer.accept(engine.getElapsedTime()); // Report the final simulation time
 
       } catch (SpanException ex) {
         // Swallowing the spanException as the internal `spanId` is not user meaningful info.

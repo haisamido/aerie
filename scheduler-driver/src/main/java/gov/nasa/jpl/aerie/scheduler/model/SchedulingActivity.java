@@ -5,10 +5,10 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -30,7 +30,6 @@ import java.util.Optional;
  * @param duration the length of time this activity instances lasts for after its start
  * @param arguments arguments are stored in a String/SerializedValue hashmap.
  * @param topParent the parent activity if any
- * @param isNew whether this activity was created in this scheduling run, or already existed in the plan
  */
 public record SchedulingActivity(
     ActivityDirectiveId id,
@@ -41,7 +40,7 @@ public record SchedulingActivity(
     ActivityDirectiveId topParent,
     ActivityDirectiveId anchorId,
     boolean anchoredToStart,
-    boolean isNew
+    String name
 ) {
 
   public static SchedulingActivity of(
@@ -50,8 +49,7 @@ public record SchedulingActivity(
       Duration startOffset,
       Duration duration,
       ActivityDirectiveId anchorId,
-      boolean anchoredToStart,
-      boolean isNew
+      boolean anchoredToStart
   ) {
     return new SchedulingActivity(
         id,
@@ -62,7 +60,7 @@ public record SchedulingActivity(
         null,
         anchorId,
         anchoredToStart,
-        isNew
+        null
     );
   }
 
@@ -74,8 +72,7 @@ public record SchedulingActivity(
       Map<String, SerializedValue> parameters,
       ActivityDirectiveId topParent,
       ActivityDirectiveId anchorId,
-      boolean anchoredToStart,
-      boolean isNew
+      boolean anchoredToStart
   ) {
     return new SchedulingActivity(
         id,
@@ -86,12 +83,12 @@ public record SchedulingActivity(
         topParent,
         anchorId,
         anchoredToStart,
-        isNew
+        null
     );
   }
 
   public SchedulingActivity withNewDuration(Duration duration){
-    return SchedulingActivity.of(
+    return new SchedulingActivity(
         this.id,
         this.type,
         this.startOffset,
@@ -100,12 +97,12 @@ public record SchedulingActivity(
         this.topParent,
         this.anchorId,
         this.anchoredToStart,
-        this.isNew()
+        this.name
     );
   }
 
   public SchedulingActivity withNewAnchor(ActivityDirectiveId anchorId, boolean anchoredToStart, Duration startOffset) {
-    return SchedulingActivity.of(
+    return new SchedulingActivity(
         this.id,
         this.type,
         startOffset,
@@ -114,12 +111,12 @@ public record SchedulingActivity(
         this.topParent,
         anchorId,
         anchoredToStart,
-        this.isNew
+        this.name
     );
   }
 
   public SchedulingActivity withNewDirectiveId(ActivityDirectiveId id) {
-    return SchedulingActivity.of(
+    return new SchedulingActivity(
         id,
         this.type,
         startOffset,
@@ -128,12 +125,12 @@ public record SchedulingActivity(
         this.topParent,
         this.anchorId,
         this.anchoredToStart,
-        this.isNew
+        this.name
     );
   }
 
   public SchedulingActivity withNewTopParent(ActivityDirectiveId topParent) {
-    return SchedulingActivity.of(
+    return new SchedulingActivity(
         this.id,
         this.type,
         startOffset,
@@ -142,12 +139,12 @@ public record SchedulingActivity(
         topParent,
         this.anchorId,
         this.anchoredToStart,
-        this.isNew
+        this.name
     );
   }
 
   public static SchedulingActivity fromExistingActivityDirective(ActivityDirectiveId id, ActivityDirective activity, ActivityType type, Duration duration){
-    return SchedulingActivity.of(
+    return new SchedulingActivity(
         id,
         type,
         activity.startOffset(),
@@ -156,7 +153,7 @@ public record SchedulingActivity(
         null,
         activity.anchorId(),
         activity.anchoredToStart(),
-        false
+        null
     );
   }
 
@@ -247,8 +244,8 @@ public record SchedulingActivity(
    */
   public boolean equalsInProperties(final SchedulingActivity that){
     return type.equals(that.type)
-           && duration.isEqualTo(that.duration)
-           && startOffset.isEqualTo(that.startOffset)
+           && duration.equals(that.duration)
+           && startOffset.equals(that.startOffset)
            && arguments.equals(that.arguments)
            && Objects.equals(topParent, that.topParent)
            && Objects.equals(anchorId, that.anchorId)

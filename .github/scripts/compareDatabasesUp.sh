@@ -3,16 +3,17 @@
 mkdir results
 mkdir comparison
 
-PGCMPINPUT1=./pgdumpmigrated/AerieMigrated \
-PGCMPINPUT2=./pgdumpraw/AerieRaw \
-PGCLABEL1=AerieMigrated \
-PGCLABEL2=AerieRaw \
+PGCMPINPUT1=./pgdumpmigrated/AerieMigratedUp \
+PGCMPINPUT2=./pgdumpcurrent/AerieCurrent \
+PGCLABEL1=AerieMigratedUp \
+PGCLABEL2=AerieCurrent \
 PGCFULLOUTPUT=./comparison/fulloutput.txt \
 PGCUNEXPLAINED=./comparison/unexplained.txt \
 PGCBADEXPLAIN=./comparison/badexplanations.txt \
 PGDB=postgres \
 PGBINDIR=/usr/bin \
 PGCOMITSCHEMAS="('hdb_catalog'),('pg_catalog'),('information_schema')" \
+PGCEXPLANATIONS=./explanations \
 ./pgcmp
 return_code=$?
 

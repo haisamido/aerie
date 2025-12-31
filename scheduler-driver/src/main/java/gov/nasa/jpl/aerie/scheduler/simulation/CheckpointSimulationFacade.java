@@ -1,11 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.CachedSimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResultsComputerInputs;
 import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
@@ -16,6 +13,9 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
+import gov.nasa.jpl.aerie.types.ActivityDirective;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.merlin.driver.CheckpointSimulationDriver.onceAllActivitiesAreFinished;
 import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.scheduleFromPlan;
+import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.schedulingActToActivityDir;
 import static gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacadeUtils.updatePlanWithChildActivities;
 
 public class CheckpointSimulationFacade implements SimulationFacade {
@@ -118,7 +119,6 @@ public class CheckpointSimulationFacade implements SimulationFacade {
         planSimCorrespondence.directiveIdActivityDirectiveMap().put(replacements.getValue(), value);
       }
       //replace the anchor ids in the plan
-      final var replacementMap = new HashMap<ActivityDirectiveId, ActivityDirective>();
       for (final var act : planSimCorrespondence.directiveIdActivityDirectiveMap().entrySet()) {
         if (act.getValue().anchorId() != null && act.getValue().anchorId().equals(replacements.getKey())) {
           final var replacementActivity = new ActivityDirective(
@@ -126,12 +126,8 @@ public class CheckpointSimulationFacade implements SimulationFacade {
               act.getValue().serializedActivity(),
               replacements.getValue(),
               act.getValue().anchoredToStart());
-          replacementMap.put(act.getKey(), replacementActivity);
+          planSimCorrespondence.directiveIdActivityDirectiveMap().put(act.getKey(), replacementActivity);
         }
-      }
-      for (final var replacement : replacementMap.entrySet()) {
-        planSimCorrespondence.directiveIdActivityDirectiveMap().remove(replacement.getKey());
-        planSimCorrespondence.directiveIdActivityDirectiveMap().put(replacement.getKey(), replacement.getValue());
       }
     }
   }
@@ -308,13 +304,14 @@ public class CheckpointSimulationFacade implements SimulationFacade {
       final Plan plan,
       final Duration until,
       final Set<String> resourceNames
-  ) throws SimulationException, SchedulingInterruptedException
-  {
+  ) throws SimulationException, SchedulingInterruptedException {
     if (this.initialSimulationResults != null) {
       final var inputPlan = scheduleFromPlan(plan, schedulerModel);
-      final var initialPlanA = scheduleFromPlan(this.initialSimulationResults.plan(), schedulerModel);
-      if (initialPlanA.equals(inputPlan)) {
-        return initialSimulationResults;
+      final var initialPlan = scheduleFromPlan(this.initialSimulationResults.plan(), schedulerModel);
+
+      final var equalPlanIdMap = initialPlan.equalsWithIdMap(inputPlan);
+      if (equalPlanIdMap.isPresent()) {
+        return initialSimulationResults.replaceIds(equalPlanIdMap.get());
       }
     }
     final var resultsInput = simulateNoResults(plan, until);
@@ -322,13 +319,16 @@ public class CheckpointSimulationFacade implements SimulationFacade {
     this.latestSimulationData = new SimulationData(
         plan,
         driverResults,
-        SimulationResultsConverter.convertToConstraintModelResults(driverResults)
+        new gov.nasa.jpl.aerie.constraints.model.SimulationResults(driverResults)
     );
     return this.latestSimulationData;
   }
 
   @Override
   public Optional<SimulationData> getLatestSimulationData() {
-    return Optional.ofNullable(this.latestSimulationData);
+    if (this.latestSimulationData == null)
+      return Optional.ofNullable(this.initialSimulationResults);
+    else
+      return Optional.of(this.latestSimulationData);
   }
 }

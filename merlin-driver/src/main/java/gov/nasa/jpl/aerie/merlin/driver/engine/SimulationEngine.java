@@ -1,10 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.types.ActivityInstance;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.resources.SimulationResourceManager;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
@@ -28,6 +26,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -828,7 +828,7 @@ public final class SimulationEngine implements AutoCloseable {
                 .stream()
                 .map(spanToActivityInstanceId::get)
                 .toList(),
-            (activityParents.containsKey(span)) ? Optional.empty() : Optional.ofNullable(directiveId),
+            Optional.ofNullable(directiveId),
             outputAttributes
         ));
       } else {
@@ -843,7 +843,7 @@ public final class SimulationEngine implements AutoCloseable {
                 .stream()
                 .map(spanToActivityInstanceId::get)
                 .toList(),
-            (activityParents.containsKey(span)) ? Optional.empty() : Optional.of(directiveId)
+            Optional.ofNullable(directiveId)
         ));
       }
     });
@@ -884,7 +884,7 @@ public final class SimulationEngine implements AutoCloseable {
                       }
                     }
                   }
-                  var activitySpanID = Optional.of(spanToActivities.get(event.provenance()).id());
+                  var activitySpanID = Optional.ofNullable(spanToActivities.get(event.provenance())).map(ActivityInstanceId::id);
                   output = EventGraph.concurrently(
                       output,
                       EventGraph.atom(

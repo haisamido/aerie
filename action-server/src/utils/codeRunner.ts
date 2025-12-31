@@ -1,0 +1,204 @@
+/* eslint-disable func-style */
+import * as vm from "node:vm";
+import type { PoolClient } from "pg";
+import { createLogger, format, transports } from "winston";
+import { ActionsAPI } from "@nasa-jpl/aerie-actions";
+import { configuration } from "../config";
+import type { ActionConfig, ActionResponse } from "../type/types";
+
+const { ACTION_LOCAL_STORE, SEQUENCING_LOCAL_STORE, WORKSPACE_BASE_URL } = configuration();
+
+function injectLogger(oldConsole: any, logBuffer: string[], secrets?: Record<string, any> | undefined) {
+  // secrets may be passed as last argument, to be censored in the logs
+  const censoredSecrets = { ...(secrets || {}) };
+
+  // inject a winston logger to be passed to the action VM, replacing its normal `console`,
+  // so we can capture the console outputs and return them with the action results
+  const logger = createLogger({
+    level: "debug", // todo allow user to set log level
+    format: format.combine(
+      format.timestamp(),
+      format.printf(({ level, message, timestamp }) => {
+        const logLine = `${timestamp} [${level.toUpperCase()}] `;
+        let output = message as string;
+
+        // If the action has secrets filter them out of the log.
+        if (Object.keys(censoredSecrets).length > 0) {
+          const secretValues = Object.values(censoredSecrets);
+
+          for (const secretValue of secretValues) {
+            if(secretValue.length) {
+              output = output.replaceAll(secretValue, "*****");
+            }
+          }
+        }
+
+        logBuffer.push(logLine + output);
+
+        return logLine;
+      }),
+    ),
+    // todo log to console if log level is debug
+    transports: [new transports.Console()], // optional, for debugging
+  });
+
+  return {
+    ...oldConsole,
+    log: (...args: any[]) => logger.info(args.join(" ")),
+    debug: (...args: any[]) => logger.debug(args.join(" ")),
+    info: (...args: any[]) => logger.info(args.join(" ")),
+    warn: (...args: any[]) => logger.warn(args.join(" ")),
+    error: (...args: any[]) => logger.error(args.join(" ")),
+  };
+}
+
+type ActionGlobalContext = Partial<typeof globalThis> & {
+  console: Console;
+  [key: string]: unknown;
+};
+
+function getGlobals() {
+  // Look at the global environment variables and only pass the ones with our permitted prefix to the action.
+  const permittedEnvironmentVariables: Record<string, string> = {};
+  Object.keys(globalThis.process.env).forEach((env) => {
+    if (env.startsWith(ActionsAPI.ENVIRONMENT_VARIABLE_PREFIX) && globalThis.process.env[env]) {
+      permittedEnvironmentVariables[env] = globalThis.process.env[env];
+    }
+  });
+
+  // create a new context (globals) object to give the action when running
+  // including copies of most global context, except only the permitted subset of env vars
+  const aerieGlobal: ActionGlobalContext  = {
+    console,
+    exports: {},
+    require,
+    __dirname,
+    process: {
+      ...process,
+      env: { ...permittedEnvironmentVariables },
+    },
+  };
+  Object.setPrototypeOf(aerieGlobal, globalThis);
+
+  return aerieGlobal;
+}
+
+export const jsExecute = async (
+  code: string,
+  parameters: Record<string, any>,
+  settings: Record<string, any>,
+  actionRunId: string,
+  client: PoolClient,
+  workspaceId: number,
+  secrets: Record<string, string> | undefined,
+): Promise<ActionResponse> => {
+  // create a clone of the global object
+  // to be passed to the context so it has access to eg. node built-ins
+  const aerieGlobal = getGlobals();
+
+  // don't treat role as a secret so we don't censor it
+  let userRole = "";
+  if(secrets && secrets.userRole) {
+    userRole = secrets.userRole;
+    delete secrets.userRole;
+  }
+
+  // inject custom logger to capture logs from action run
+  const logBuffer: string[] = [];
+  aerieGlobal.console = injectLogger(aerieGlobal.console, logBuffer, secrets);
+
+  const context = vm.createContext(aerieGlobal);
+
+  let username = "";
+  if(secrets && secrets.user) {
+    try {
+      const user = JSON.parse(secrets.user) || {};
+      username = user?.username || "";
+    } catch(e) {
+      aerieGlobal.console.warn("Could not retrieve username from user token");
+    }
+  }
+
+  try {
+    vm.runInContext(code, context);
+    // todo: main runs outside of VM - is that OK?
+    const actionConfig: ActionConfig = {
+      ACTION_FILE_STORE: ACTION_LOCAL_STORE,
+      ACTION_RUN_ID: actionRunId,
+      SECRETS: secrets,
+      SEQUENCING_FILE_STORE: SEQUENCING_LOCAL_STORE,
+      USERNAME: username,
+      USER_ROLE: userRole,
+      WORKSPACE_BASE_URL: WORKSPACE_BASE_URL
+    };
+    const actionsAPI = new ActionsAPI(client, workspaceId, actionConfig);
+    const results = await context.main(parameters, settings, actionsAPI);
+
+    return { results, console: logBuffer, errors: null };
+  } catch (error: any) {
+    // wrap `throw 10` into a `new throw(10)`
+    let errorResponse: Error;
+
+    if ((error !== null && typeof error !== "object") || !("message" in error && "stack" in error)) {
+      errorResponse = new Error(String(error));
+    } else {
+      errorResponse = error;
+    }
+    // also push errors into run logs - useful to have them there
+    if (errorResponse.message) {
+      aerieGlobal.console.error(errorResponse.message);
+    }
+    if (errorResponse.stack) {
+      aerieGlobal.console.error(errorResponse.stack);
+    }
+    if (errorResponse.cause) {
+      aerieGlobal.console.error(errorResponse.cause);
+    }
+
+    return Promise.resolve({
+      results: null,
+      console: logBuffer,
+      errors: {
+        stack: errorResponse.stack,
+        message: errorResponse.message,
+        cause: errorResponse.cause,
+      },
+    });
+  }
+};
+
+/**
+ * Todo correct return type for schemas?
+ */
+export const extractSchemas = async (code: string): Promise<any> => {
+  // todo: do we need to pass globals/console for this part?
+
+  // need to initialize exports for the cjs module to work correctly
+  const aerieGlobal = getGlobals();
+  const context = vm.createContext(aerieGlobal);
+
+  try {
+    vm.runInContext(code, context);
+    const { parameterDefinitions, settingDefinitions } = context.exports;
+
+    return { parameterDefinitions, settingDefinitions };
+  } catch (error: any) {
+    // wrap `throw 10` into a `new throw(10)`
+    let errorResponse: Error;
+
+    if ((error !== null && typeof error !== "object") || !("message" in error && "stack" in error)) {
+      errorResponse = new Error(String(error));
+    } else {
+      errorResponse = error;
+    }
+
+    return Promise.resolve({
+      results: null,
+      errors: {
+        stack: errorResponse.stack,
+        message: errorResponse.message,
+        cause: errorResponse.cause,
+      },
+    });
+  }
+};

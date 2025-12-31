@@ -10,6 +10,10 @@ java {
   }
 }
 
+jar {
+  archiveBaseName = 'constraints_edsl'
+}
+
 test {
   useJUnitPlatform()
   testLogging {
@@ -30,10 +34,12 @@ repositories {
 
 dependencies {
   implementation project(':merlin-driver')
-  implementation project(':merlin-sdk')
   implementation project(':parsing-utilities')
+  implementation project(':type-utils')
+  implementation project(':procedural:timeline')
+  implementation project(':procedural:constraints')
 
-  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:6.0.1'
 
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

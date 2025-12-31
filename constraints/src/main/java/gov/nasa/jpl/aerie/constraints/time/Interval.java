@@ -1,9 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Comparator;
 import java.util.Objects;
 
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
@@ -130,6 +128,25 @@ public final class Interval implements Comparable<Interval>{
   public static Interval at(final long quantity, final Duration unit) {
     return at(Duration.of(quantity, unit));
   }
+
+  public gov.nasa.ammos.aerie.procedural.timeline.Interval toProceduralInterval() {
+    return new gov.nasa.ammos.aerie.procedural.timeline.Interval(
+        start,
+        end,
+        this.includesStart() ? gov.nasa.ammos.aerie.procedural.timeline.Interval.Inclusivity.Inclusive
+                             : gov.nasa.ammos.aerie.procedural.timeline.Interval.Inclusivity.Exclusive,
+        this.includesEnd()   ? gov.nasa.ammos.aerie.procedural.timeline.Interval.Inclusivity.Inclusive
+                             : gov.nasa.ammos.aerie.procedural.timeline.Interval.Inclusivity.Exclusive);
+  }
+
+  public static Interval fromProceduralInterval(gov.nasa.ammos.aerie.procedural.timeline.Interval interval) {
+    return new Interval(
+        interval.start,
+        interval.includesStart() ? Inclusive : Exclusive,
+        interval.end,
+        interval.includesEnd() ? Inclusive : Exclusive);
+  }
+
 
   public static final Interval EMPTY = new Interval(Duration.ZERO, Duration.ZERO.minus(Duration.EPSILON));
   public static final Interval FOREVER = new Interval(Duration.MIN_VALUE, Duration.MAX_VALUE);
@@ -265,7 +282,7 @@ public final class Interval implements Comparable<Interval>{
   }
 
   public boolean isSingleton(){
-    return this.start.isEqualTo(this.end);
+    return this.start.equals(this.end);
   }
 
   public static Interval betweenClosedOpen(final Duration start, final Duration end) {
@@ -286,7 +303,7 @@ public final class Interval implements Comparable<Interval>{
 
   public static int compareStartToStart(final Interval x, final Interval y) {
     // First, order by absolute time.
-    if (!x.start.isEqualTo(y.start)) {
+    if (!x.start.equals(y.start)) {
       return x.start.compareTo(y.start);
     }
 
@@ -300,7 +317,7 @@ public final class Interval implements Comparable<Interval>{
 
   public static int compareEndToEnd(final Interval x, final Interval y) {
     // First, order by absolute time.
-    if (!x.end.isEqualTo(y.end)) {
+    if (!x.end.equals(y.end)) {
       return x.end.compareTo(y.end);
     }
 
@@ -348,7 +365,7 @@ public final class Interval implements Comparable<Interval>{
   }
 
   public static boolean meets(final Interval x, final Interval y) {
-    return (x.end.isEqualTo(y.start)) && (x.endInclusivity != y.startInclusivity);
+    return (x.end.equals(y.start)) && (x.endInclusivity != y.startInclusivity);
   }
 
   public static boolean metBy(final Interval x, final Interval y) {

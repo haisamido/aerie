@@ -36,11 +36,12 @@ dependencies {
 
   implementation project(':merlin-framework')
   implementation project(':contrib')
+  implementation project(':type-utils')
 
   testImplementation project(':merlin-framework-junit')
   testImplementation 'org.assertj:assertj-core:3.24.2'
 
-  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:6.0.1'
 
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

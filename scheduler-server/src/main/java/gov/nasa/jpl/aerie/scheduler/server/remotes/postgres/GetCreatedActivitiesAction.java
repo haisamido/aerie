@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+import gov.nasa.jpl.aerie.scheduler.model.GoalId;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -15,11 +15,13 @@ import java.util.Map;
 /*package-local*/ final class GetCreatedActivitiesAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     select
-      c.goal_id,
-      c.goal_revision,
+      a.goal_id,
+      a.goal_revision,
+      c.goal_invocation_id,
       c.activity_id
     from scheduler.scheduling_goal_analysis_created_activities as c
-    where c.analysis_id = ?
+    join scheduler.scheduling_goal_analysis as a using (analysis_id, goal_invocation_id)
+    where c.analysis_id = ?;
     """;
 
   private final PreparedStatement statement;
@@ -34,7 +36,11 @@ import java.util.Map;
 
     final var createdActivities = new HashMap<GoalId, List<ActivityDirectiveId>>();
     while (resultSet.next()) {
-      final var goalId = new GoalId(resultSet.getLong("goal_id"), resultSet.getLong("goal_revision"));
+      final var goalId = new GoalId(
+          resultSet.getLong("goal_id"),
+          resultSet.getLong("goal_revision"),
+          resultSet.getLong("goal_invocation_id")
+      );
       final var activityId = new ActivityDirectiveId(resultSet.getLong("activity_id"));
 
       if (!createdActivities.containsKey(goalId)) createdActivities.put(goalId, new ArrayList<>());

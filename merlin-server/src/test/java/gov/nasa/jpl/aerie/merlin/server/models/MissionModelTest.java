@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedModelType;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.types.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -47,7 +47,9 @@ public final class MissionModelTest {
                   new Parameter("z", ValueSchema.INT),
                   new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
               List.of(),
-              ValueSchema.ofStruct(Map.of())
+              ValueSchema.ofStruct(Map.of()),
+              Optional.empty(),
+              Optional.empty()
           ));
 
     // WHEN
@@ -57,7 +59,10 @@ public final class MissionModelTest {
         new ActivityType(name,
                          specType.getInputType().getParameters(),
                          specType.getInputType().getRequiredParameters(),
-                         specType.getOutputType().getSchema())));
+                         specType.getOutputType().getSchema(),
+                         Optional.empty(),
+                         Optional.empty()
+        )));
 
     // THEN
     assertTrue(activityTypes.entrySet().containsAll(expectedTypes.entrySet()));
@@ -74,7 +79,9 @@ public final class MissionModelTest {
               new Parameter("z", ValueSchema.INT),
               new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
           List.of(),
-          ValueSchema.ofStruct(Map.of())
+          ValueSchema.ofStruct(Map.of()),
+          Optional.empty(),
+          Optional.empty()
       );
 
     // WHEN
@@ -87,7 +94,10 @@ public final class MissionModelTest {
         typeName,
         specType.getInputType().getParameters(),
         specType.getInputType().getRequiredParameters(),
-        specType.getOutputType().getSchema());
+        specType.getOutputType().getSchema(),
+        Optional.empty(),
+        Optional.empty()
+    );
 
     // THEN
     assertEquals(expectedType, type);
@@ -109,7 +119,10 @@ public final class MissionModelTest {
             activityId,
             specType.getInputType().getParameters(),
             specType.getInputType().getRequiredParameters(),
-            specType.getOutputType().getSchema());
+            specType.getOutputType().getSchema(),
+            Optional.empty(),
+            Optional.empty()
+        );
     });
   }
 

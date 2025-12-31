@@ -1,8 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstance;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.types.ActivityInstance;
+import gov.nasa.jpl.aerie.types.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -19,8 +18,9 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
+import gov.nasa.jpl.aerie.types.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.types.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
@@ -407,9 +407,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities,
       final Timestamp simulationStart
   ) throws SQLException {
-    try (
-        final var postActivitiesAction = new PostSpansAction(connection);
-    ) {
+    try (final var postActivitiesAction = new PostSpansAction(connection)) {
       final var simulatedActivityRecords = simulatedActivities.entrySet().stream()
           .collect(Collectors.toMap(
               e -> e.getKey().id(),
@@ -566,6 +564,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         postSimulationResults(connection, datasetId, results, SimulationStateRecord.success());
         deleteSimulationExtent(connection, datasetId);
         transactionContext.commit();
+        logger.info("%s set simulation status to success".formatted(Duration.microseconds(System.nanoTime() / 1000)));
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to store simulation results", ex);
       } catch (final NoSuchSimulationDatasetException ex) {
@@ -582,6 +581,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         failSimulation(connection, datasetId, reason);
         deleteSimulationExtent(connection, datasetId);
         transactionContext.commit();
+        logger.info("%s set simulation status to failed".formatted(Duration.microseconds(System.nanoTime() / 1000)));
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to update simulation state to failure", ex);
       } catch (final NoSuchSimulationDatasetException ex) {

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.constraints.model.ConstraintResult;
+import gov.nasa.jpl.aerie.constraints.model.EDSLConstraintResult;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
@@ -8,9 +8,9 @@ import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsCompilationError;
 import gov.nasa.jpl.aerie.constraints.json.ConstraintParsers;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -120,7 +120,7 @@ public class ConstraintsDSLCompilationService {
   }
 
   public sealed interface ConstraintsDSLCompilationResult {
-    record Success(Expression<ConstraintResult> constraintExpression) implements ConstraintsDSLCompilationResult {}
-    record Error(List<ConstraintsCompilationError.UserCodeError> errors) implements ConstraintsDSLCompilationResult {}
+    record Success(Expression<EDSLConstraintResult> constraintExpression) implements ConstraintsDSLCompilationResult {}
+    record Error(List<ConstraintsCompilationError> errors) implements ConstraintsDSLCompilationResult {}
   }
 }

@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationEngineConfiguration;
 import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -12,6 +11,7 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivity;
+import gov.nasa.jpl.aerie.types.MissionModelId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -35,9 +35,9 @@ public class CheckpointSimulationFacadeTest {
   private static PlanInMemory makePlanA012(Map<String, ActivityType> activityTypeMap) {
     final var plan = new PlanInMemory();
     final var actTypeA = activityTypeMap.get("BasicActivity");
-    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t0, null, null, true, false));
-    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t1hr, null, null, true, false));
-    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t2hr, null, null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t0, null, null, true));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t1hr, null, null, true));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t2hr, null, null, true));
     return plan;
   }
   @BeforeEach
@@ -67,7 +67,7 @@ public class CheckpointSimulationFacadeTest {
     final var plan = makePlanA012(activityTypes);
     newSimulationFacade.simulateNoResults(plan, t2hr);
     //we are stopping at 2hr, at the start of the last activity so it will not have a duration in the plan
-    assertNull(plan.getActivities().stream().filter(a -> a.startOffset().isEqualTo(t2hr)).findFirst().get().duration());
+    assertNull(plan.getActivities().stream().filter(a -> a.startOffset().equals(t2hr)).findFirst().get().duration());
   }
 
   /**
@@ -103,7 +103,7 @@ public class CheckpointSimulationFacadeTest {
   {
     final var plan = new PlanInMemory();
     final var actTypeA = activityTypes.get("ControllableDurationActivity");
-    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t0, HOUR.times(200), null, true, false));
+    plan.add(SchedulingActivity.of(idGenerator.next(), actTypeA, t0, HOUR.times(200), null, true));
     final var results = newSimulationFacade.simulateNoResultsAllActivities(plan).computeResults();
     assertEquals(H.getEndAerie(), results.duration);
     assert(results.unfinishedActivities.size() == 1);
